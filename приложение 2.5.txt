@@ -1,0 +1,332 @@
+Program.cs (код самого меню)
+
+namespace GarageConsoleApp;
+
+/// <summary>
+/// Класс Program
+/// здесь описываем логику приложения
+/// вызываем нужные методы пишем обработчики и тд
+/// </summary>
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        /*// Вызовем метод для получения данных о водителях
+               DatabaseRequests.GetDriverQuery();
+               Console.WriteLine();
+               // Добавим нового водителя в БД
+               DatabaseRequests.AddDriverQuery("Денис", "Иванов", DateTime.Parse("1997.01.12"));
+               // Вызовем метод для получения данных о водителях
+               DatabaseRequests.GetDriverQuery();
+               
+               // Вызовем метод для получения данных о типах автомобилей
+               DatabaseRequests.GetTypeCarQuery();
+               Console.WriteLine();
+               // Добавим новый тип автомобиля в БД
+               DatabaseRequests.AddTypeCarQuery("Воздушный");
+               // Вызовем метод для получения данных о типах автомобилей
+               DatabaseRequests.GetTypeCarQuery();*/
+        
+        bool running = true;
+        while (running)
+        {
+            Console.WriteLine("Выберите действие:");
+
+            Console.WriteLine("1. Просмотр типов машин ");
+            Console.WriteLine("2. Добавление типов машин ");
+            Console.WriteLine("3. Просмотр водителей ");
+            Console.WriteLine("4. Добавление водителей ");
+            Console.WriteLine("5. Добавление категории прав");
+            Console.WriteLine("6. Просмотр категорий прав ");
+            Console.WriteLine("7. Добавление категории прав водителю ");
+            Console.WriteLine("8. Просмотр категорий прав водителей ");
+            Console.WriteLine("9. Просмотр машин ");
+            Console.WriteLine("10. Добавление машин ");
+            Console.WriteLine("11. Просмотр маршрутов ");
+            Console.WriteLine("12. Добавление маршрутов ");
+            Console.WriteLine("13. Просмотр рейсов ");
+            Console.WriteLine("14. Добавление рейсов ");
+            Console.WriteLine("0. Выход");
+            Console.WriteLine();
+
+            int choice = Convert.ToInt32(Console.ReadLine());
+            switch (choice)
+            {
+                case 1:
+                    DatabaseRequests.GetTypeCarQuery();
+                    Console.WriteLine();
+                    break;
+                case 2:
+                    Console.WriteLine("Введите тип машины ");
+                    string typeCar = Console.ReadLine();
+                    DatabaseRequests.AddTypeCarQuery(typeCar);
+                    break;
+                case 3:
+                    DatabaseRequests.GetDriverQuery();
+                    Console.WriteLine();
+                    break;
+                case 4:
+                    Console.WriteLine("Введите имя ");
+                    string firstName = Console.ReadLine();
+                    Console.WriteLine("Введите фамилию ");
+                    string lastName = Console.ReadLine();
+                    
+                    Console.WriteLine("Введите дату рождения ");
+                    DateTime birthdate = DateTime.Parse(Console.ReadLine());
+                    DatabaseRequests.AddDriverQuery(firstName, lastName, birthdate);
+                    break;
+                case 5:
+                    Console.WriteLine("Добавьте категорию прав  ");
+                    string category = Console.ReadLine();
+                    DatabaseRequests.AddRightsCategoryQuery(category);
+                    break;
+                case 6:
+                    DatabaseRequests.GetRightsCategoryQuery();
+                    Console.WriteLine();
+                    break;
+                case 7:
+                    Console.WriteLine("Введите id водителя");
+                    int idDriver = int.Parse(Console.ReadLine());
+                    
+                    Console.WriteLine("Введите id категории прав ");
+                    int rightsCategory = int.Parse(Console.ReadLine());
+                    DatabaseRequests.AddDriverRightsCategoryQuery(idDriver, rightsCategory);
+                    break;
+                case 8:
+                    DatabaseRequests.GetDriverRightsCategoryQuery();
+                    Console.WriteLine();
+                    break;
+                case 9:
+                    DatabaseRequests.GetCarQuery();
+                    Console.WriteLine();
+                    break;
+                case 10:
+                    Console.WriteLine("Введите id тип машины ");
+                    int idCar = int.Parse(Console.ReadLine());
+                    
+                    Console.WriteLine("Введите название машины ");
+                    string nameCar = Console.ReadLine();
+                    
+                    Console.WriteLine("Введите номер машины ");
+                    string numbers = Console.ReadLine();
+                    
+                    Console.WriteLine("Введите количество мест ");
+                    int numsPass = int.Parse(Console.ReadLine());
+                    
+                    DatabaseRequests.AddCarQuery(idCar, nameCar, numbers, numsPass);
+                    break;
+                case 11:
+                    DatabaseRequests.GetItineraryQuery();
+                    Console.WriteLine();
+                    break;
+                case 12:
+                    Console.WriteLine("Введите маршрут ");
+                    string itinerary = Console.ReadLine();
+                    DatabaseRequests.AddItineraryQuery(itinerary);
+                    break;
+                case 13:
+                    DatabaseRequests.GetRouteQuery();
+                    Console.WriteLine();
+                    break;
+                case 14:
+                    Console.WriteLine("Добавьте рейс  ");
+                    string route = Console.ReadLine();
+                    DatabaseRequests.AddRouteQuery(route);
+                    break;
+                case 0:
+                    running = false;
+                    break;
+
+                default:
+                    Console.WriteLine("Неверный выбор. Попробуйте снова.");
+                    break;
+            }
+        }
+    }
+}
+DatabaseRequests.cs (все методы приложения)
+
+using Npgsql;
+
+namespace GarageConsoleApp;
+
+/// <summary>
+/// Класс DatabaseRequests
+/// содержит методы для отправки запросов к БД
+/// </summary>
+public static class DatabaseRequests
+{
+    /// <summary>
+    /// Метод GetTypeCarQuery
+    /// отправляет запрос в БД на получение списка типов машин
+    /// выводит в консоль список типов машин
+    /// </summary>
+    public static void GetTypeCarQuery()
+    {
+        // Сохраняем в переменную запрос на получение всех данных и таблицы type_car
+        var querySql = "SELECT * FROM type_car";
+        // Создаем команду(запрос) cmd, передаем в нее запрос и соединение к БД
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        // Выполняем команду(запрос)
+        // результат команды сохранится в переменную reader
+        using var reader = cmd.ExecuteReader();
+        
+        // Выводим данные которые вернула БД
+        while (reader.Read())
+        {
+            Console.WriteLine($"Id: {reader[0]} Название: {reader[1]}");
+        }
+    }
+    //GetRightsCategoryQuery
+    public static void GetRightsCategoryQuery()
+    {
+        var querySql = "SELECT * FROM rights_category";
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        using var reader = cmd.ExecuteReader();
+
+        while (reader.Read())
+        {
+            Console.WriteLine($"Id: {reader[0]} категория прав: {reader[1]} ");
+        }
+    }
+    //GetCarQuery
+    public static void GetCarQuery()
+    {
+        var querySql = "SELECT * FROM car";
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        using var reader = cmd.ExecuteReader();
+
+        while (reader.Read())
+        {
+            Console.WriteLine($"Id: {reader[0]} id типа машины: {reader[1]} Название: {reader[2]} Номер машины: {reader[3]} количество пассажиров: {reader[4]}");
+        }
+    }
+    //AddCarQuery
+    public static void AddCarQuery(int idCar,string nameCar, string numbers, int numsPass)
+    {
+        var querySql = $"INSERT INTO type_car(name) VALUES ('{idCar},{nameCar}, {numbers}, {numsPass}')";
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        cmd.ExecuteNonQuery();
+    }
+    //GetItineraryQuery 
+    public static void GetItineraryQuery()
+    {
+        var querySql = "SELECT * FROM itinerary";
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        using var reader = cmd.ExecuteReader();
+
+        while (reader.Read())
+        {
+            Console.WriteLine($"Id: {reader[0]} название: {reader[1]} ");
+        }
+    }
+    //AddItineraryQuery
+    public static void AddItineraryQuery(string itinerary)
+    {
+        var querySql = $"INSERT INTO type_car(name) VALUES ('{itinerary}')";
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        cmd.ExecuteNonQuery();
+    }
+    //GetRouteQuery
+    public static void GetRouteQuery()
+    {
+        var querySql = "SELECT * FROM route";
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        using var reader = cmd.ExecuteReader();
+
+        while (reader.Read())
+        {
+            Console.WriteLine($"Id : {reader[0]} id водителя: {reader[1]} : id машины {reader[2]} количество пассажиров: {reader[3]} ");
+        }
+    }
+    //AddRouteQuery
+    public static void AddRouteQuery(string route)
+    {
+        var querySql = $"INSERT INTO type_car(name) VALUES ('{route}')";
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        cmd.ExecuteNonQuery();
+    }
+    
+    /// <summary>
+    /// Метод AddTypeCarQuery
+    /// отправляет запрос в БД на добавление типа машины
+    /// </summary>
+    public static void AddTypeCarQuery(string name)
+    {
+        var querySql = $"INSERT INTO type_car(name) VALUES ('{name}')";
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Метод AddDriverQuery
+    /// отправляет запрос в БД на добавление водителей
+    /// </summary>
+    public static void AddDriverQuery(string firstName, string lastName, DateTime birthdate)
+    {
+        var querySql = $"INSERT INTO driver(first_name, last_name, birthdate) VALUES ('{firstName}', '{lastName}', '{birthdate}')";
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Метод GetDriverQuery
+    /// отправляет запрос в БД на получение списка водителей
+    /// выводит в консоль данные о водителях
+    /// </summary>
+    public static void GetDriverQuery()
+    {
+        var querySql = "SELECT * FROM driver";
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        using var reader = cmd.ExecuteReader();
+
+        while (reader.Read())
+        {
+            Console.WriteLine($"Id: {reader[0]} Имя: {reader[1]} Фамилия: {reader[2]} Дата рождения: {reader[3]}");
+        }
+    }
+
+    /// <summary>
+    /// Метод AddRightsCategoryQuery
+    /// отправляет запрос в БД на добавление категорий прав
+    /// </summary>
+    public static void AddRightsCategoryQuery(string name)
+    {
+        var querySql = $"INSERT INTO rights_category(name) VALUES ('{name}')";
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Метод AddDriverRightsCategoryQuery
+    /// отправляет запрос в БД на добавление категории прав водителю
+    /// </summary>
+    public static void AddDriverRightsCategoryQuery(int driver, int rightsCategory)
+    {
+        var querySql = $"INSERT INTO driver_rights_category(id_driver, id_rights_category) VALUES ({driver}, {rightsCategory})";
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Метод GetDriverRightsCategoryQuery
+    /// отправляет запрос в БД на получение категорий водителей
+    /// выводит в консоль информацию о категориях прав водителей
+    /// </summary>
+    public static void GetDriverRightsCategoryQuery()
+    {
+        var querySql = "SELECT dr.first_name, dr.last_name, rc.name " +
+                       "FROM driver_rights_category " +
+                       "INNER JOIN driver dr on driver_rights_category.id_driver = dr.id " +
+                       "INNER JOIN rights_category rc on rc.id = driver_rights_category.id_rights_category;";
+                      
+        using var cmd = new NpgsqlCommand(querySql, DatabaseService.GetSqlConnection());
+        using var reader = cmd.ExecuteReader();
+
+        while (reader.Read())
+        {
+            Console.WriteLine($"Имя: {reader[0]} Фамилия: {reader[1]} Категория прав: {reader[2]}");
+        }
+    }
+}
+
